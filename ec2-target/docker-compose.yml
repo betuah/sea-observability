@@ -171,8 +171,8 @@ services:
     restart: unless-stopped
     ports:
       - '5000:5000'
-    environment:
-      - DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/1443805759514083461/ihM2neSs6gYk97Ni6AhvVBtG8Mw7HkQs9QVob5q9h_fxNAyz2FJJa3RPpRh_ed-4ST70
+    env:
+      - ./ec2-prometheus/.env
     volumes:
       - ./var/log:/var/log
     deploy:
