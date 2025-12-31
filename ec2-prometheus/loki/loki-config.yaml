@@ -1,0 +1,45 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+common:
+  path_prefix: /loki
+  replication_factor: 1
+  ring:
+    instance_addr: 0.0.0.0
+    kvstore:
+      store: memberlist
+
+memberlist:
+  join_members:
+    - loki
+
+schema_config:
+  configs:
+    - from: 2020-10-24
+      store: boltdb-shipper
+      object_store: s3
+      schema: v11
+      index:
+        prefix: loki_index_
+        period: 24h
+
+storage_config:
+  boltdb_shipper:
+    active_index_directory: /loki/index
+    cache_location: /loki/index_cache
+    shared_store: s3
+
+
+  aws:
+    s3: s3://us-east-1/loki-logging-smlc
+    endpoint: s3.us-east-1.amazonaws.com
+    region: us-east-1
+    s3forcepathstyle: false
+
+limits_config:
+  retention_period: 744h #31days
+  ingestion_rate_mb: 10
+  ingestion_burst_size_mb: 20
+
