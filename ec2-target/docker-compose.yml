@@ -8,7 +8,7 @@ services:
       - "3000:3000"
     volumes:
       - "grafana:/var/lib/grafana"
-      - "$PWD/grafana/grafana.ini:/etc/grafana/grafana.ini"
+      - "./grafana:/etc/grafana/"
     depends_on:
       - cadvisor
     deploy:
@@ -17,6 +17,11 @@ services:
           memory: 512M
         reservations:
           memory: 256M
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_AUTH_ANONYMOUS_ORG_ID=1
+      - GF_AUTH_DISABLE_LOGIN_FORM=false
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
@@ -63,7 +68,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - "$PWD/prometheus:/etc/prometheus"
+      - "/opt/sea-observability/ec2-target/prometheus:/etc/prometheus"
       - "prometheus:/prometheus"
     deploy:
       resources:
@@ -82,7 +87,7 @@ services:
     ports:
       - "9115:9115"
     volumes:
-      - "./blackbox:/config"
+      - "/opt/sea-observability/ec2-target/blackbox:/config"
     command:
       - "--config.file=/config/blackbox.yml"
     deploy:
@@ -100,7 +105,7 @@ services:
     ports:
       - "9093:9093"
     volumes:
-      - "$PWD/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml"
+      - "/opt/sea-observability/ec2-target/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml"
       - "alertmanager:/alertmanager"
     deploy:
       resources:
@@ -109,20 +114,20 @@ services:
         reservations:
           memory: 128M
 
-  uptime-kuma:
-    image: louislam/uptime-kuma:2
-    container_name: uptime-kuma
-    restart: always
-    ports:
-      - '3001:3001'
-    volumes:
-      - './data:/app/data'
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-        reservations:
-          memory: 256M
+  #uptime-kuma:
+    #image: louislam/uptime-kuma:2
+    #container_name: uptime-kuma
+    #restart: always
+    #ports:
+      #- '3001:3001'
+    #volumes:
+      #- './data:/app/data'
+    #deploy:
+      #resources:
+        #limits:
+          #memory: 512M
+        #reservations:
+         # memory: 256M
 
   loki:
     image: grafana/loki:2.9.3
@@ -133,7 +138,7 @@ services:
       - '3100:3100'
     command: -config.file=/etc/loki/loki-config.yaml
     volumes:
-      - ./loki:/etc/loki
+      - /opt/sea-observability/ec2-target/loki:/etc/loki
       - loki:/tmp
     deploy:
       resources:
@@ -146,9 +151,11 @@ services:
     image: grafana/promtail:2.9.3
     container_name: promtail
     restart: unless-stopped
-    command: -config.file=/etc/promtail/promtail-config.yaml
+    command:
+      - -config.file=/etc/promtail/promtail-config.yaml
+      - -config.expand-env=true
     volumes:
-      - ./promtail:/etc/promtail
+      - /opt/sea-observability/ec2-target/promtail:/etc/promtail
       - /var/log:/var/log
       - /var/log/journal:/var/log/journal:ro
       - /run/log/journal:/run/log/journal:ro
@@ -166,13 +173,13 @@ services:
           memory: 128M
 
   incident-webhook:
-    build: ./incident-webhook
+    build: ../incident-webhook
     container_name: incident-webhook
     restart: unless-stopped
     ports:
       - '5000:5000'
-    env:
-      - ./ec2-prometheus/.env
+    env_file:
+      - ../ec2-prometheus/.env
     volumes:
       - ./var/log:/var/log
     deploy:
@@ -181,6 +188,15 @@ services:
           memory: 256M
         reservations:
           memory: 128M
+  snmp-exporter:
+    image: prom/snmp-exporter:latest
+    container_name: snmp-exporter
+    restart: unless-stopped
+    ports:
+      - "9116:9116"
+    command: "--config.file=/etc/snmp_exporter/snmp.yml"
+    volumes:
+      - /opt/sea-observability/ec2-target/snmp_exporter/snmp.yml:/etc/snmp_exporter/snmp.yml:ro
 
 volumes:
   grafana: {}
