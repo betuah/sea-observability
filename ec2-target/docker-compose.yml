@@ -1,9 +1,15 @@
+#networks:
+  #monitoring:
+    #driver: bridge
+    #ipam:
+      #config:
+        #- subnet: 172.16.1.0/24
 services:
-
+  #grafana#
   grafana:
     image: "grafana/grafana:latest"
     container_name: "grafana"
-    restart: "unless-stopped"
+    restart: "always"
     ports:
       - "3000:3000"
     volumes:
@@ -23,8 +29,9 @@ services:
       - GF_AUTH_ANONYMOUS_ORG_ID=1
       - GF_AUTH_DISABLE_LOGIN_FORM=false
 
+#cadvisor#
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
+    image: gcr.io/cadvisor/cadvisor:latest #v0.49.1
     container_name: cadvisor
     privileged: true
     restart: always
@@ -48,6 +55,7 @@ services:
         reservations:
           memory: 128M
 
+#redis#
   redis:
     image: redis:latest
     container_name: redis
@@ -60,10 +68,11 @@ services:
         reservations:
           memory: 128M
 
+#prometheus#
   prometheus:
-    image: "prom/prometheus:latest"
+    image: "prom/prometheus:latest" #v2.55.0"
     container_name: "prometheus"
-    restart: "unless-stopped"
+    restart: "always"
     privileged: true
     ports:
       - "9090:9090"
