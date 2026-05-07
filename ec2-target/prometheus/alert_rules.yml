@@ -66,74 +66,84 @@ groups:
         annotations:
           summary: " {{ $labels.vlan }} gateway down at {{ $labels.location }}"
           description: "VLAN gateway {{ $labels.instance }} at {{ $labels.location }} ({{ $labels.vlan }}) has been unreachable for more than 5 minutes."     
-  
-  - name: docker_alerts
+###ACCESS P0INT###
+  - name: WiFi_alerts
     rules:
+      - alert: WiFi Connection Lost
+        expr: probe_success{job="blackbox-ap"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: " {{ $labels.ap }} WiFi connection lost at {{ $labels.location }} "
+          description: "WiFi Connection {{ $labels.instance }} at {{ $labels.location }} ({{ $labels.ap }}) has been lost  for more than 5 minutes"
+  #- name: docker_alerts
+    #rules:
        #Alert ketika container stopped/exited
-      - alert: Container Down
-        expr: count(container_last_seen{name=~".+", image!=""}) by (name, instance) unless count(rate(container_cpu_usage_seconds_total{name=~".+", image!=""}[1m]) > 0) by (name, instance)
-        for: 2m
-        labels:
-          severity: critical
-        annotations:
-          summary: "Container {{ $labels.name }} is down"
-          description: "Docker container {{ $labels.name }} on {{ $labels.instance }} has been down for more than 2 minutes."
-      - alert: ContainerDown
-        expr: |
+      #- alert: Container Down
+        #expr: count(container_last_seen{name=~".+", image!=""}) by (name, instance) unless count(rate(container_cpu_usage_seconds_total{name=~".+", image!=""}[1m]) > 0) by (name, instance)
+        #for: 2m
+        #labels:
+          #severity: critical
+        #annotations:
+          #summary: "Container {{ $labels.name }} is down"
+          #description: "Docker container {{ $labels.name }} on {{ $labels.instance }} has been down for more than 2 minutes."
+      #- alert: ContainerDown
+        #expr: |
           #absent(container_last_seen{image!=""})
-        for: 1m
-        labels:
-          severity: critical
-        annotations:
-          summary: "Container down: {{ $labels.name }}"
-          description: "The container {{ $labels.name }} on {{ $labels.instance }} has stopped or disappeared from cAdvisor."
+        #for: 1m
+        #labels:
+          #severity: critical
+        #annotations:
+          #summary: "Container down: {{ $labels.name }}"
+          #description: "The container {{ $labels.name }} on {{ $labels.instance }} has stopped or disappeared from cAdvisor."
       
       # Alert untuk container yang terus restart (dilihat dari umur container yang pendek)
-      - alert: Container Restarting
-        expr: time() - container_start_time_seconds{name=~".+", image!=""} < 300
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Container {{ $labels.name }} keeps restarting"
-          description: "Docker container {{ $labels.name }} on {{ $labels.instance }} has been restarting (running for less than 5 minutes continuously)."
+      #- alert: Container Restarting
+        #expr: time() - container_start_time_seconds{name=~".+", image!=""} < 300
+        #for: 5m
+        #labels:
+         #severity: warning
+        #annotations:
+          #summary: "Container {{ $labels.name }} keeps restarting"
+          #description: "Docker container {{ $labels.name }} on {{ $labels.instance }} has been restarting (running for less than 5 minutes continuously)."
       
       # Alert untuk container CPU usage tinggi
-      - alert: Container CPU High Usage
-        expr: (sum(rate(container_cpu_usage_seconds_total{name=~".+", image!=""}[5m])) by (name, instance)) * 100 > 80
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "High CPU usage in container {{ $labels.name }}"
-          description: "Container {{ $labels.name }} on {{ $labels.instance }} CPU usage is above 80% (current: {{ printf \"%.2f\" $value }}%)"
+      #- alert: Container CPU High Usage
+        #expr: (sum(rate(container_cpu_usage_seconds_total{name=~".+", image!=""}[5m])) by (name, instance)) * 100 > 80
+        #for: 5m
+        #labels:
+         # severity: warning
+        #annotations:
+         # summary: "High CPU usage in container {{ $labels.name }}"
+         # description: "Container {{ $labels.name }} on {{ $labels.instance }} CPU usage is above 80% (current: {{ printf \"%.2f\" $value }}%)"
       
       # Alert untuk container memory usage tinggi
-      - alert: Container High Memory Usage
-        expr: (container_memory_working_set_bytes{name=~".+", image!=""} / container_spec_memory_limit_bytes{name=~".+", image!=""} * 100) > 80
-        for: 5m
-        labels:
-          severity: critical
-        annotations:
-          summary: "High memory usage in container {{ $labels.name }}"
-          description: "Container {{ $labels.name }} on {{ $labels.instance }} memory usage is above 80% (current: {{ printf \"%.2f\" $value }}%)"
+      #- alert: Container High Memory Usage
+       # expr: (container_memory_working_set_bytes{name=~".+", image!=""} / container_spec_memory_limit_bytes{name=~".+", image!=""} * 100) > 80
+        #for: 5m
+        #labels:
+          #severity: critical
+        #annotations:
+          #summary: "High memory usage in container {{ $labels.name }}"
+          #description: "Container {{ $labels.name }} on {{ $labels.instance }} memory usage is above 80% (current: {{ printf \"%.2f\" $value }}%)"
       
       # Alert untuk container tanpa memory limit (best practice)
-      - alert: ContainerWithoutMemoryLimit
-        expr: container_spec_memory_limit_bytes{name=~".+", image!=""} == 0
-        for: 5m
-        labels:
-          severity: info
-        annotations:
-          summary: "Container {{ $labels.name }} has no memory limit"
-          description: "Container {{ $labels.name }} on {{ $labels.instance }} is running without memory limit. Consider setting memory limits for better resource management."
+      #- alert: ContainerWithoutMemoryLimit
+        #expr: container_spec_memory_limit_bytes{name=~".+", image!=""} == 0
+        #for: 5m
+        #labels:
+          #severity: info
+        #annotations:
+          #summary: "Container {{ $labels.name }} has no memory limit"
+          #description: "Container {{ $labels.name }} on {{ $labels.instance }} is running without memory limit. Consider setting memory limits for better resource management."
 
       # Alert untuk OOM (Out of Memory) kill
-      - alert: ContainerOOMKilled
-        expr: increase(container_oom_events_total{name=~".+"}[5m]) > 0
-        for: 1m
-        labels:
-          severity: critical
-        annotations:
-          summary: "Container {{ $labels.name }} was OOM killed"
-          description: "Container {{ $labels.name }} on {{ $labels.instance }} was killed due to Out Of Memory."
+      #- alert: ContainerOOMKilled
+        #expr: increase(container_oom_events_total{name=~".+"}[5m]) > 0
+        #for: 1m
+        #labels:
+          #severity: critical
+        #annotations:
+          #summary: "Container {{ $labels.name }} was OOM killed"
+          #description: "Container {{ $labels.name }} on {{ $labels.instance }} was killed due to Out Of Memory."

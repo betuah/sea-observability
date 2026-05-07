@@ -6,3 +6,9 @@ var/log/
 data/
 .env
 *.env
+/loki/loki-data
+ec2-target/loki/loki-data/
+ec2-target/loki/loki-data/chunks/
+ec2-target/loki/loki-data/index/
+ec2-target/loki/loki-data/wal/
+ec2-targett/

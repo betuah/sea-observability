@@ -76,6 +76,10 @@ services:
     privileged: true
     ports:
       - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'
     volumes:
       - "/opt/sea-observability/ec2-target/prometheus:/etc/prometheus"
       - "prometheus:/prometheus"
@@ -142,13 +146,14 @@ services:
     image: grafana/loki:2.9.3
     container_name: loki
     privileged: true
+    user: root
     restart: unless-stopped
     ports:
       - '3100:3100'
     command: -config.file=/etc/loki/loki-config.yaml
     volumes:
       - /opt/sea-observability/ec2-target/loki:/etc/loki
-      - loki:/tmp
+      - /opt/sea-observability/ec2-target/loki/loki-data:/loki
     deploy:
       resources:
         limits:
